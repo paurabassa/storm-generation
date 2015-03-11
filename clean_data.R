@@ -32,8 +32,23 @@ plot(v.tot, typ='l')
 
 # NOW put this into a data.frame format with the right date and time
 
+tm <- as.POSIXct(strptime("0101199200", "%d%m%Y%H")) + 3600*(0:(length(v.res)-1))
+tides <- data.frame(tm,v.tot,v.res, v.tot-v.res)
+names(tides) <-c("Date", "t.tide", "res", "a.tide")
 
-ptides
+
+all <- merge(hcast, tides, by="Date")
+o.clim <- all[,c("Date","hs", "fp", "dir", "U10", "V10", "t.tide", "res")]
+
+plot(o.clim[o.clim$hs>2.5,c("hs", "fp", "dir", "res")])
+
+storms.times <- as.POSIXlt(o.clim$Date[o.clim$hs>2.5])
+plot(storms.times$yday,storms.times$year+1900,ylim=c(2013,1990))
+
+rng <- range(storms.times$yday)
+inc <- (rng[2]-rng[1])/12
+seq(rng[1],rng[2],inc)
+hist(storms.times$yday,breaks= seq(rng[1],rng[2],inc))
 
 
 #read future tides
@@ -57,6 +72,5 @@ names(ftides)[5] <- "U-Comp"
 names(ftides)[6] <- "V-Comp"
 
 
-
-library(copula)
+#library(copula)
 
