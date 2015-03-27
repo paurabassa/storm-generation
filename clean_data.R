@@ -11,9 +11,9 @@
 #read wave hindcast data
 hcast.all <- read.csv("~/Post-Doc-LDN/Storm-Generation/Raw.Data/data.csv")
 #str(hcast)
-hcast.all$Date <- as.POSIXct(strptime(hcast.all$Date, "%Y-%m-%d %H:%M:%S"))
+hcast.all$Date <- as.POSIXct(strptime(hcast.all$Date, "%Y-%m-%d %H:%M:%S", "GMT"))
 
-waves <- hcast.all[!is.na(hcast.all$hs),c("Date","hs", "fp", "dir", "U10", "V10")]
+waves <- hcast.all[!is.na(hcast.all$hs),c("Date","hs", "fp", "tm", "dir", "U10", "V10")]
 #str(waves)
 
 # this data is every 3 hours at the begining and the every hour at some point
@@ -54,7 +54,7 @@ for (i in 1:tl){
 #plot(v.tot, typ='l')
 
 # Create a data.frame of tides with the corresponding time 
-tm <- as.POSIXct(strptime("0101199200", "%d%m%Y%H")) + 3600*(0:(length(v.res)-1))
+tm <- as.POSIXct(strptime("0101199200", "%d%m%Y%H", "GMT")) + 3600*(0:(length(v.res)-1))
 tides <- data.frame(tm, v.tot, v.res, v.tot-v.res)
 names(tides) <-c("Date", "t.tide", "res", "a.tide")
 write.csv(tides, file="./Clean.Data/tides-all.csv", row.names=F, quote=F)
@@ -93,7 +93,7 @@ ff <- tempfile()
 cat(file = ff, lines2, sep = "\n")
 ftides <- read.fwf(ff, widths = c(18,10,10,10,12,12))    #
 #str(ftides)
-ftides$V1 <- as.POSIXct(strptime(as.character(ftides$V1), "%d/%m/%Y %H:%M"))
+ftides$V1 <- as.POSIXct(strptime(as.character(ftides$V1), "%d/%m/%Y %H:%M", "GMT"))
 names(ftides)[1] <- "Date"
 names(ftides)[2] <- "Level"
 names(ftides)[3] <- "Speed"
