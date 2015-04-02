@@ -1,9 +1,7 @@
 #
-# R file to collect, clean and save relevant wave and tide data for its analysis
 #
-# several files are generated: 
-# 
-# 1 hiscast with the variables of interest every 3 hours f
+# R file to collect, clean and save relevant wave and tide data for its analysis. 
+# several files are generated and stored a Clean.Data/
 #
 #
  
@@ -76,11 +74,8 @@ write.csv(climate, file = "./Clean.Data/clim-all.csv", row.names=F, quote=F)
 write.csv(climate[t.hourly,], file = "./Clean.Data/clim-hourly.csv", row.names=F, quote=F)
 write.csv(climate[t.3hours,], file = "./Clean.Data/clim-3hours.csv", row.names=F, quote=F)
 
-#
-# 2nd part: Read future files and write it in a second file
-#
-# read future tides
 
+# read future tides
 con <- file("./Raw.Data/6000591_2015-2064.txt")
 lines <- readLines(con)
 close(con)

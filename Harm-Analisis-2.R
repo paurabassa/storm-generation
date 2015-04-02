@@ -52,6 +52,7 @@ plot(dens.lg)
 xfit <- exp(dens.lg$x)
 yfit <- dens.lg$y*exp(-dens.lg$x)
 
+
 #load auxirial function CDF (cumulative distribution function)
 source("R.functions/funcs_HA.R")
 #function to sample the new distrib
@@ -91,6 +92,9 @@ FindStorm <- function(nex.exc, pots){
   index
 }
 
+interv <- range(p.clim$lg.hs.p)
+wid <- abs(interv[1]-interv[2])/100
+
 # storms generation
 n.str  <- as.POSIXct("20150101 00:00",format ="%Y%m%d %H:%M") #next strom time
 i      <- 1
@@ -100,11 +104,18 @@ s.ind <- vector()  # storm index to be cloned
 gap   <- vector()  # time to the next storm
 
 while(n.str < future){
-  s.t[i]   <- as.POSIXct(n.str, origin="1970-01-01 00:00.00 UTC")
+  s.t[i]    <- as.POSIXct(n.str, origin="1970-01-01 00:00.00 UTC") #storm date
+  gap[i]   <- max(as.integer(r.Approx.Empirical(1, xfit,yfit)),1) 
+  #time to next storm
+  
+# select a storm with similar value of  lg.hs.p for the corresponding
+  aux.date <- paste("2004-",format(n.str, "%m-%d %H:%M"), sep="")
+  date.hs.p <- as.POSIXct(strptime(aux.date, "%Y-%m-%d %H:%M", "GMT"))
+  lg.hs.p <- p.clim[which(p.clim$Date == date.hs.p),"lg.hs.p"] #value of lg.hs.p at the start of the storm 
+  s.ind[i] <- sample(which(abs(p.clim$lg.hs.p[pots$p.exc] - lg.hs.p)<wid),1)  
 #  yf       <- yearfraction(date=n.str)         #year fraction
 #  n.gap.aux<- r.pp.cond(lambda3,thet.lam3,yf) #gap in year units
-  gap[i]   <- max(as.integer(r.Approx.Empirical(1, xfit,yfit)),1)
-  s.ind[i] <- FindStorm(gap[i],pots)               #storm index
+#  s.ind[i] <- FindStorm(gap[i],pots)               #storm index
   n.dur    <- pots$c.siz[s.ind[i]]  #storm duration hours
   n.str    <- as.POSIXct(s.t[i] + 3600*(gap[i] + n.dur), 
                          origin="1970-01-01 00:00.00 UTC") #time to next storm
@@ -148,143 +159,6 @@ for(i in 1:length(new.storms$s.times)){
 }
 
 true.storms <- storm.climate[storm.climate$hs>2.5,]
-write.csv(true.storms, "New.Data/storms-Harm.csv",row.names=F)
+write.csv(true.storms, "New.Data/storms-Harm-2.csv",row.names=F)
 
-orig.storms <- p.clim[p.clim$hs>2.5,]
-write.csv(orig.storms, "New.Data/storms-Orig.csv",row.names=F)
-
-
-
-
-
-
-################################################
-#
-# IGNORE FROM HERE ONWARDS
-#
-##########################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#####################################################################
-# ---- select stroms with same inter.arr.times as the ones 
-# ---- saved in resample
-###################################################
-
-
-FindStorm(  1, pots)
-FindStorm(320, pots)
-pots$nex.exc[FindStorm(1,pots)]
-
-# generate a new list of Peaks over threshold, in which the inter arrivals 
-# times are the ones of resample, p.exc contains the start of the mirror 
-# storm in data.in, and c.siz contains the duration of the mirror storm 
-
-nresample <- length(resample)
-
-new.pots <- list( p.exc = vector(mode="numeric", length = nresample),
-                  c.siz = vector(mode="numeric", length = nresample),
-                  nex.exc = new.nex.exc)
-#set.seed(1234)
-for(i in 1:nresample){
-  i.pots.storm <-  FindStorm(new.pots$nex.exc[i],pots)
-  new.pots$p.exc[i] = pots$p.exc[i.pots.storm]
-  new.pots$c.siz[i] = pots$c.siz[i.pots.storm]
-}
-
-plot(new.pots$c.siz,new.pots$p.exc)
-
-############################################################
-#  auxiliary function to print the storms out of a climate #
-############################################################
-
-ExtractClimateStorms <- function(climate){
-  storm.climate <- list(Date = as.POSIXct(vector(mode="numeric"),
-                                           origin= '1970-01-01 00:00.00 UTC'),
-                        hs = vector(mode="numeric"), fp  = vector(mode="numeric"),
-                        tm = vector(mode="numeric"), dir = vector(mode="numeric"),
-                        U10 = vector(mode="numeric"), V10 = vector(mode="numeric"))
-  i.aux<-1
-  for(i in 1:length(climate$hs)){
-#  for(i in 1:3000){ 
-    if(climate$hs[i]>2.5){
-      storm.climate$Date[i.aux] = climate$Date[i]
-      storm.climate$hs[i.aux]   = climate$hs[i]
-      storm.climate$fp[i.aux]   = climate$fp[i]
-      storm.climate$tm[i.aux]   = climate$tm[i]
-      storm.climate$dir[i.aux]  = climate$dir[i]
-      storm.climate$U10[i.aux]  = climate$U10[i]
-      storm.climate$V10[i.aux]  = climate$V10[i]
-      i.aux <- i.aux + 1
-    }
-  }
-  as.data.frame(storm.climate)
-}
-
-storm.orig <- ExtractClimateStorms(p.clim)
-str(storm.orig)
-plot(storm.orig$Date, storm.orig$hs)
-write.csv(storm.orig, "orig-storms.csv",row.names=F)
-
-
-########################################################
-#  generate data like clim.in for the resampled storms #
-########################################################
-
-nstorms <- nresample        # total numbe of resampled storms
-#nstorms <- 1000
-max.time <- length(ts.peri)
-max.time <- 8*365.25*20          # 4 years
-set.seed(1234)
-
-new.clim <- data.frame(Date = as.POSIXct(vector(mode="numeric",length=max.time),
-                                           origin= '1970-01-01 00:00.00 UTC'),
-                 hs   = vector(mode="numeric", length=max.time),
-                 fp   = vector(mode="numeric", length=max.time),
-                 tm   = vector(mode="numeric", length=max.time),
-                 dir  = vector(mode="numeric", length=max.time),
-                 U10  = vector(mode="numeric", length=max.time),
-                 V10  = vector(mode="numeric", length=max.time))
-new.clim$Date[1] <- as.POSIXct("2013-01-01 GMT")
-for(i in 2:max.time) new.clim$Date[i]  <-  new.clim$Date[i-1] + 1*3600
-
-i.time <- 1
-i.storm <- 1
-while(i.time +  new.pots$c.siz[i.storm] < max.time & i.storm < nstorms){
-#  start.storm <- new.pots$p.exc[i.storm]
-#  duration    <- new.pots$c.siz[i.storm]
-  storm.dur   <- new.pots$c.siz[i.storm]
-  storm.times <- new.pots$p.exc[i.storm]:(new.pots$p.exc[i.storm] +
-                                          new.pots$c.siz[i.storm])
-  new.clim$hs[i.time:(i.time+storm.dur)] <-
-                exp(ts.peri[i.time:(i.time+storm.dur)] + ts.stat[storm.times])
-  new.clim$fp[i.time:(i.time+storm.dur)] <- p.clim$fp[storm.times]
-  new.clim$tm[i.time:(i.time+storm.dur)] <- p.clim$tm[storm.times]
-  new.clim$dir[i.time:(i.time+storm.dur)] <- p.clim$dir[storm.times]
-  new.clim$U10[i.time:(i.time+storm.dur)] <- p.clim$U10[storm.times]
-  new.clim$V10[i.time:(i.time+storm.dur)] <- p.clim$V10[storm.times]
-
-  i.time  <- i.time + storm.dur + new.pots$nex.exc[i.storm]
-  i.storm <- i.storm + 1
-}
-                                                                         
-i.time
-i.storm
-
-new.storms <- ExtractClimateStorms(new.clim)
-str(new.storms)
-plot(new.storms$Date, new.storms$hs)
-write.csv(new.storms, "storms-new.csv",row.names=F)
 

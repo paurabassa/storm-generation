@@ -11,7 +11,7 @@ Directories:
 Files: 
 - clean_data.R: reads files from Raw.Data and rewrites it into Clean.Data in
                 uniform csv format. 
-- analysis_clusters.R: 
+- analysis_clusters.R: does some plots to analyise the clustering of storm events. 
 - Compare-Harm-Poiss.R: program to compare Harm-Analisis.R and PoisProcAnalisis.R outputs. 
 - Harm-Analisis.R: Analisis of interarrival time of storms via removing periodic components in hs
 - PoisProcAnalisis.R: Analisis of interarrival time of storms via a non-homogenuous Poisson Process. 

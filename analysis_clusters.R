@@ -1,18 +1,16 @@
 #R file to analyise the clustering of storm events. 
 
 #read ocean climate data (waves + tides)
-clim <- read.csv("./Clean.Data/clim-3hours.csv")
-#for hourly climate in a shorter timeframe use: 
-#o.clim <- read.csv("./Clean.Data/clim-hourly.csv")
+#clim <- read.csv("./Clean.Data/clim-3hours.csv")
+clim <- read.csv("./Clean.Data/clim-hourly.csv")
 
 #fix the format of the Date variable
 clim$Date <- as.POSIXct(strptime(clim$Date, "%Y-%m-%d %H:%M:%S"))
-#str(clim)
+str(clim)
 
 #select the climate of stroms 
 clim.storms <- clim[clim$hs>2.5,]
-
-plot(clim.storms[,c("hs", "fp", "dir", "res")])
+plot(clim.storms[,c("hs", "fp", "tm", "dir", "res")])
 
 #preliminary plot of the behaviour of clusters
 storms.times <- as.POSIXlt(clim.storms$Date)
@@ -47,7 +45,7 @@ hist(aux,breaks= seq(rng[1],rng[2],inc))
 
 # Storm times using Peaks over threshold and clusteriing 
 
-source("functions_pots.R")
+source("R.functions/ExtractPOTpp.R")
 pots.storm <- ExtractPOTPointProcess(waves$hs,2.5)
 storms.times <- as.POSIXlt(waves$Date[pots.storm$p.exc])
 storms.durat <- pots.storm$c.siz

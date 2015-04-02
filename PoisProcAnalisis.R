@@ -1,16 +1,15 @@
-set.seed(1234)
 ##
-##
-##
-##
-##
+## 
+## Analisis of interarrival time of storms via a non-homogenuous 
+## Poisson Process.
 ##
 ##
 
 ####################
 # Part 1: Data fit #
 ####################
-
+# Set seed for random numbers
+set.seed(1234)
 # Read data
 waves <- read.csv("./Clean.Data/waves-hourly.csv")
 waves$Date <- as.POSIXct(strptime(waves$Date, "%Y-%m-%d %H:%M:%S","GMT"))
